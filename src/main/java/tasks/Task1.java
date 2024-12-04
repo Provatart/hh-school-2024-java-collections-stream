@@ -1,10 +1,13 @@
 package tasks;
 
+import common.ApiPersonDto;
 import common.Person;
 import common.PersonService;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /*
 Задача 1
@@ -23,6 +26,11 @@ public class Task1 {
 
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return Collections.emptyList();
+    return persons.stream()
+        .sorted(Comparator.comparingInt(person -> personIds.indexOf(person.id())))
+        .collect(Collectors.toList());
   }
 }
+/* Асимптотика: главным сортировочным алгоритмом, который используется в
+stream API, является TimSort, worst case которого O(n log n)
+ */
