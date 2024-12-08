@@ -1,14 +1,8 @@
 package tasks;
 
 import common.Person;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -25,69 +19,62 @@ public class Task9 {
 
   // Костыль, эластик всегда выдает в топе "фальшивую персону".
   // Конвертируем начиная со второй
+
+  // проверка на пустоту множества кажется лишней, так как при пустом входном списке после стрима вернется
+  // так же пустой лист. удалять запись тоже не нужно (сложность удаления элемента списка O(n), а сложность skip O(1),
+  // следовательно пропускаем skip(1)
   public List<String> getNames(List<Person> persons) {
-    if (persons.size() == 0) {
-      return Collections.emptyList();
-    }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
+    return persons.stream()
+        .skip(1)
+        .map(Person::firstName)
+        .collect(Collectors.toList());
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
+  // более лаконично вернем Set
   public Set<String> getDifferentNames(List<Person> persons) {
-    return getNames(persons).stream().distinct().collect(Collectors.toSet());
+    return new HashSet<>(getNames(persons));
   }
 
+
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
+  //не понятно почему secondName+firstName+secondName? если опечатка, то исправил. вместо if используем stream
   public String convertPersonToString(Person person) {
-    String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;
+    return Stream.of(person.firstName(), person.middleName(), person.secondName())
+        .filter(Objects::nonNull)
+        .collect(Collectors.joining(" "));
   }
 
   // словарь id персоны -> ее имя
+  // лаконичнее возвращаем словарь требуемой конфы (с доработкой merge function)
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-    Map<Integer, String> map = new HashMap<>(1);
-    for (Person person : persons) {
-      if (!map.containsKey(person.id())) {
-        map.put(person.id(), convertPersonToString(person));
-      }
-    }
-    return map;
+    return persons.stream()
+        .collect(Collectors
+            .toMap(Person::id,
+                this::convertPersonToString,
+                (a, b) -> a));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
+  // проверка anyMatch stream'a persons1
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    boolean has = false;
-    for (Person person1 : persons1) {
-      for (Person person2 : persons2) {
-        if (person1.equals(person2)) {
-          has = true;
-        }
-      }
-    }
-    return has;
+    Set<Person> persons2Set = new HashSet<>(persons2);
+    return persons1.stream().anyMatch(persons2Set::contains);
   }
 
   // Посчитать число четных чисел
+  //избавимся от переменной. forEach - O(n), a count() - O(1)
   public long countEven(Stream<Integer> numbers) {
-    count = 0;
-    numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    return count;
+     return numbers.filter(x -> x % 2 == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
   // Пояснение в чем соль - мы перетасовали числа, обернули в HashSet, а toString() у него вернул их в сортированном порядке
+  /* псевдосортировка в Set начинается от того, что Hash от Integer равен самому числу. Количество bucket минимум на треть
+  превосходит количество элементов множества. Адрес bucket расчитывается (Hash mod buckets) в последовательности
+  возрастающих на единицу чисел любого размера, количество bucket будет как минимум на 33% больше величины максимального элемента
+  поэтому адрес всегда будет совпадать со значением числа, а поэтому выводиться в возрастающем порядке.
+  */
   void listVsSet() {
     List<Integer> integers = IntStream.rangeClosed(1, 10000).boxed().collect(Collectors.toList());
     List<Integer> snapshot = new ArrayList<>(integers);

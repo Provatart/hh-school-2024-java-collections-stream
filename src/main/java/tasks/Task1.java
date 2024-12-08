@@ -2,9 +2,9 @@ package tasks;
 
 import common.Person;
 import common.PersonService;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
 Задача 1
@@ -14,15 +14,22 @@ import java.util.Set;
 Оценить асимптотику работы
  */
 public class Task1 {
-
   private final PersonService personService;
-
   public Task1(PersonService personService) {
     this.personService = personService;
   }
-
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return Collections.emptyList();
+    Map<Integer, Person> resultMap=new HashMap<>();
+    for (Person person : persons) {
+      resultMap.put(person.id(), person);
+    }
+    List<Person> resultList = new ArrayList<>();
+    for (Integer personId : personIds) {
+      resultList.add(resultMap.get(personId));
+    }
+    return resultList;
   }
 }
+/* Асимптотика: заполнение словаря O(n), заполнение результирующего списка O(n). Итого O(2n) = o(n)
+ */
