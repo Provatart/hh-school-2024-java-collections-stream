@@ -3,9 +3,7 @@ package tasks;
 import common.Person;
 import common.PersonService;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -16,20 +14,22 @@ import java.util.stream.Collectors;
 Оценить асимптотику работы
  */
 public class Task1 {
-
   private final PersonService personService;
-
   public Task1(PersonService personService) {
     this.personService = personService;
   }
-
   public List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = personService.findPersons(personIds);
-    return persons.stream()
-        .sorted(Comparator.comparingInt(person -> personIds.indexOf(person.id())))
-        .collect(Collectors.toList());
+    Map<Integer, Person> resultMap=new HashMap<>();
+    for (Person person : persons) {
+      resultMap.put(person.id(), person);
+    }
+    List<Person> resultList = new ArrayList<>();
+    for (Integer personId : personIds) {
+      resultList.add(resultMap.get(personId));
+    }
+    return resultList;
   }
 }
-/* Асимптотика: главным сортировочным алгоритмом, который используется в
-stream API, является TimSort, worst case которого O(n log n)
+/* Асимптотика: заполнение словаря O(n), заполнение результирующего списка O(n). Итого O(2n) = o(n)
  */

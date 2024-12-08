@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 отсортировать персоны по дате создания и выдать первые limit штук.
  */
 public class Task2 {
-
   public static List<Person> combineAndSortWithLimit(Collection<Person> persons1,
                                                      Collection<Person> persons2,
                                                      int limit) {

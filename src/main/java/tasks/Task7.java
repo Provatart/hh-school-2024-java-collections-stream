@@ -12,15 +12,11 @@ import java.util.stream.Collectors;
 Из коллекции компаний необходимо получить всевозможные различные названия вакансий
  */
 public class Task7 {
-
   public static Set<String> vacancyNames(Collection<Company> companies) {
-
     return companies.stream()
         .map(Company::getVacancies)
         .flatMap(Set::stream)
         .map(Vacancy::getTitle)
         .collect(Collectors.toSet());
-
   }
-
 }

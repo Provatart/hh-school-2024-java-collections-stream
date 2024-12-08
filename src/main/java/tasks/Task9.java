@@ -21,26 +21,18 @@ public class Task9 {
   // Конвертируем начиная со второй
 
   // проверка на пустоту множества кажется лишней, так как при пустом входном списке после стрима вернется
-  // так же пустой лист. удалять запись тоже не нужно, можно пропустить skip(1)
+  // так же пустой лист. удалять запись тоже не нужно (сложность удаления элемента списка O(n), а сложность skip O(1),
+  // следовательно пропускаем skip(1)
   public List<String> getNames(List<Person> persons) {
-    /*
-     if (persons.size() == 0) {
-      return Collections.emptyList();
-    }
-    persons.remove(0);
-    return persons.stream().map(Person::firstName).collect(Collectors.toList());
-    */
-       return persons.stream()
+    return persons.stream()
         .skip(1)
         .map(Person::firstName)
         .collect(Collectors.toList());
   }
 
   // Зачем-то нужны различные имена этих же персон (без учета фальшивой разумеется)
-
   // более лаконично вернем Set
   public Set<String> getDifferentNames(List<Person> persons) {
-    //return getNames(persons).stream().distinct().collect(Collectors.toSet());
     return new HashSet<>(getNames(persons));
   }
 
@@ -48,81 +40,41 @@ public class Task9 {
   // Тут фронтовая логика, делаем за них работу - склеиваем ФИО
   //не понятно почему secondName+firstName+secondName? если опечатка, то исправил. вместо if используем stream
   public String convertPersonToString(Person person) {
-    List<String> personList=List.of((""+person.firstName()), ""+person.middleName(),(""+person.secondName()));
-    return personList.stream()
-        .filter(x->!(Objects.equals(x, "null")))
+    return Stream.of(person.firstName(), person.middleName(), person.secondName())
+        .filter(Objects::nonNull)
         .collect(Collectors.joining(" "));
-
-  /*  String result = "";
-    if (person.secondName() != null) {
-      result += person.secondName();
-    }
-
-    if (person.firstName() != null) {
-      result += " " + person.firstName();
-    }
-
-    if (person.secondName() != null) {
-      result += " " + person.secondName();
-    }
-    return result;*/
   }
 
   // словарь id персоны -> ее имя
-  // лаконичнее возвращаем словарь требуемой конфы
+  // лаконичнее возвращаем словарь требуемой конфы (с доработкой merge function)
   public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-//    Map<Integer, String> map = new HashMap<>(1);
-//    for (Person person : persons) {
-//      if (!map.containsKey(person.id())) {
-//        map.put(person.id(), convertPersonToString(person));
-//      }
-//    }
     return persons.stream()
         .collect(Collectors
             .toMap(Person::id,
-                Person::firstName));
+                this::convertPersonToString,
+                (a, b) -> a));
   }
 
   // есть ли совпадающие в двух коллекциях персоны?
-  // чтобы посчитать количество дублей, нужно сравнить сумму размеров списков и размер итогового списка (уникальных id)
+  // проверка anyMatch stream'a persons1
   public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-    Long bothSize = Stream.concat(persons1.stream().map(Person::id),
-            persons2.stream().map(Person::id))
-        .distinct()
-        .count();
-
-//    boolean has = false;
-//    for (Person person1 : persons1) {
-//      for (Person person2 : persons2) {
-//        if (person1.equals(person2)) {
-//          has = true;
-//        }
-//      }
-//    }
-//    return has;
-    return !(bothSize == (persons1.size()+ persons2.size()));
+    Set<Person> persons2Set = new HashSet<>(persons2);
+    return persons1.stream().anyMatch(persons2Set::contains);
   }
 
   // Посчитать число четных чисел
-  //избавимся от переменной
+  //избавимся от переменной. forEach - O(n), a count() - O(1)
   public long countEven(Stream<Integer> numbers) {
-    //count = 0;
-    // numbers.filter(num -> num % 2 == 0).forEach(num -> count++);
-    //return count;
-    return numbers.filter(x->x%2==0).count();
+     return numbers.filter(x -> x % 2 == 0).count();
   }
 
   // Загадка - объясните почему assert тут всегда верен
   // Пояснение в чем соль - мы перетасовали числа, обернули в HashSet, а toString() у него вернул их в сортированном порядке
-  // в данном случае snapshot это полностью автономный список сделанный из первоначальной версии integers
-  //(не ссылка). изменение integers на snapshot не влияют.
-  //если бы было вот так:
-
-  //List<Integer> snapshot = new ArrayList<>();
-  //snapshot=integers;
-  //Collections.shuffle(integers);
-
-  //то после shuffle snapshot бы тоже поменялся и assert был false
+  /* псевдосортировка в Set начинается от того, что Hash от Integer равен самому числу. Количество bucket минимум на треть
+  превосходит количество элементов множества. Адрес bucket расчитывается (Hash mod buckets) в последовательности
+  возрастающих на единицу чисел любого размера, количество bucket будет как минимум на 33% больше величины максимального элемента
+  поэтому адрес всегда будет совпадать со значением числа, а поэтому выводиться в возрастающем порядке.
+  */
   void listVsSet() {
     List<Integer> integers = IntStream.rangeClosed(1, 10000).boxed().collect(Collectors.toList());
     List<Integer> snapshot = new ArrayList<>(integers);

@@ -22,13 +22,16 @@ public class Task6 {
                                                   Map<Integer, Set<Integer>> personAreaIds,
                                                   Collection<Area> areas) {
     Set<String> result = new HashSet<>();
-    Map<Integer, String> areasMap = areas.stream().collect(Collectors.toMap(o -> o.getId(), o -> o.getName()));
+    Map<Integer, Area> areasMap = areas.stream().collect(Collectors.toMap(Area::getId, a->a));
     for (Person person : persons) {
       Set<Integer> setOfPersonRegions = personAreaIds.get(person.id());
       for (Integer areaId : setOfPersonRegions) {
-        result.add(person.firstName() + " - " + areasMap.get(areaId));
+        result.add(getString(areasMap.get(areaId),person));
       }
     }
     return result;
+  }
+  public static String getString(Area area, Person person) {
+    return "%s - %s".formatted(person.firstName(), area.getName());
   }
 }
